@@ -1,31 +1,62 @@
 import { useState } from 'react';
 import {
   Button,
+  DecisionGate,
   Drawer,
   EmptyState,
   FilterBar,
   MetricStrip,
   Modal,
+  ProcessStateRail,
   Table,
   Tag,
   Timeline,
   type TableColumn,
 } from './primitives';
 
-type AuditRow = { id: string; auditoria: string; estado: string; riesgo: string };
+type AuditRow = {
+  id: string;
+  auditoria: string;
+  estado: string;
+  clasificacion: 'NC mayor' | 'NC menor';
+  riesgo: string;
+};
 
 const rows: AuditRow[] = [
-  { id: 'aud-1', auditoria: 'Retención documental 2026', estado: 'Planificada', riesgo: 'Medio' },
-  { id: 'aud-2', auditoria: 'CAPA hallazgo mayor', estado: 'En seguimiento', riesgo: 'Alto' },
+  {
+    id: 'aud-1',
+    auditoria: 'Retención documental 2026',
+    estado: 'Planificada',
+    clasificacion: 'NC menor',
+    riesgo: 'Medio',
+  },
+  {
+    id: 'aud-2',
+    auditoria: 'CAPA hallazgo mayor',
+    estado: 'En seguimiento',
+    clasificacion: 'NC mayor',
+    riesgo: 'Alto',
+  },
 ];
 
 const columns: TableColumn<AuditRow>[] = [
   { key: 'auditoria', header: 'Auditoría' },
-  { key: 'estado', header: 'Estado', render: (row) => <Tag tone="info">{row.estado}</Tag> },
+  { key: 'estado', header: 'Estado', render: (row) => <Tag tone="info">Estado: {row.estado}</Tag> },
+  {
+    key: 'clasificacion',
+    header: 'Clasificación',
+    render: (row) => (
+      <Tag tone={row.clasificacion === 'NC mayor' ? 'danger' : 'warning'}>
+        Clasificación: {row.clasificacion}
+      </Tag>
+    ),
+  },
   {
     key: 'riesgo',
     header: 'Riesgo',
-    render: (row) => <Tag tone={row.riesgo === 'Alto' ? 'danger' : 'warning'}>{row.riesgo}</Tag>,
+    render: (row) => (
+      <Tag tone={row.riesgo === 'Alto' ? 'danger' : 'warning'}>Riesgo: {row.riesgo}</Tag>
+    ),
   },
 ];
 
@@ -78,6 +109,47 @@ export function ComponentCatalog() {
             { id: 'riesgo', label: 'Riesgo', value: 'Alto' },
           ]}
         />
+      </article>
+
+      <article className="catalog-card">
+        <h3>Baseline accesible para estados legales</h3>
+        <p>
+          El riel comunica cada estado por posición, símbolo y texto; no depende solo del color y
+          respeta reduced-motion desde CSS.
+        </p>
+        <ProcessStateRail
+          states={[
+            { id: 'planificada', label: 'Planificada', status: 'completed' },
+            { id: 'ejecucion', label: 'En ejecución', status: 'completed' },
+            {
+              id: 'cierre',
+              label: 'En cierre',
+              status: 'current',
+              description: 'Puerta de decisión',
+            },
+            { id: 'emitido', label: 'Informe emitido', status: 'pending' },
+          ]}
+        />
+      </article>
+
+      <article className="catalog-card">
+        <DecisionGate
+          title="Hallazgos · validación factual"
+          actions={
+            <Button disabled disabledReason="Bloqueado: 2 apelaciones de hecho siguen abiertas">
+              Emitir informe
+            </Button>
+          }
+        >
+          <p>
+            Revise las apelaciones de hecho antes de emitir. El foco entra aquí primero para evitar
+            avanzar sin mirar los hechos.
+          </p>
+          <div className="inline-demo">
+            <Tag tone="success">✓ 10 validados</Tag>
+            <Tag tone="warning">! 2 en apelación de hecho</Tag>
+          </div>
+        </DecisionGate>
       </article>
 
       <article className="catalog-card">

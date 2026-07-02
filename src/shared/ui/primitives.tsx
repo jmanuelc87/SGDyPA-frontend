@@ -9,6 +9,27 @@ import {
 
 export type Tone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
+export type ProcessState = {
+  id: string;
+  label: string;
+  description?: string;
+  status: 'completed' | 'current' | 'pending' | 'blocked';
+};
+
+const stateStatusLabel: Record<ProcessState['status'], string> = {
+  blocked: 'Bloqueado',
+  completed: 'Completado',
+  current: 'Estado actual',
+  pending: 'Pendiente',
+};
+
+const stateStatusSymbol: Record<ProcessState['status'], string> = {
+  blocked: '!',
+  completed: '✓',
+  current: '●',
+  pending: '○',
+};
+
 type Size = 'sm' | 'md';
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -139,6 +160,76 @@ export type TableColumn<T> = {
   header: string;
   render?: (row: T) => ReactNode;
 };
+
+export function ProcessStateRail({
+  ariaLabel = 'Estado del proceso',
+  states,
+}: {
+  states: ProcessState[];
+  ariaLabel?: string;
+}) {
+  return (
+    <nav aria-label={ariaLabel} className="state-rail">
+      <ol>
+        {states.map((state, index) => (
+          <li
+            aria-current={state.status === 'current' ? 'step' : undefined}
+            className={`state-rail__item state-rail__item--${state.status}`}
+            key={state.id}
+          >
+            <span className="state-rail__marker" aria-hidden="true">
+              {stateStatusSymbol[state.status]}
+            </span>
+            <span className="state-rail__body">
+              <span className="state-rail__position">
+                Paso {index + 1} de {states.length}
+              </span>
+              <strong>{state.label}</strong>
+              <span>{stateStatusLabel[state.status]}</span>
+              {state.description ? <small>{state.description}</small> : null}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+}
+
+export function DecisionGate({
+  actions,
+  children,
+  title,
+}: {
+  title: string;
+  children: ReactNode;
+  actions: ReactNode;
+}) {
+  const reviewRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    reviewRef.current?.focus();
+  }, []);
+
+  return (
+    <section className="decision-gate" aria-labelledby="decision-gate-title">
+      <div
+        className="decision-gate__review"
+        ref={reviewRef}
+        tabIndex={-1}
+        aria-describedby="decision-gate-order"
+      >
+        <p className="eyebrow" id="decision-gate-order">
+          Foco inicial: validación factual antes de decidir
+        </p>
+        <h3 id="decision-gate-title">{title}</h3>
+        {children}
+      </div>
+      <div className="decision-gate__actions" aria-label="Acciones de decisión">
+        {actions}
+      </div>
+    </section>
+  );
+}
 
 export function Table<T extends { id: string }>({
   columns,
