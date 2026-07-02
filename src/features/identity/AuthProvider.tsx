@@ -5,6 +5,7 @@ import {
   getStoredSession,
   handleCallback,
   isExpired,
+  onSessionExpired,
   refreshSession,
   signIn,
   signOut,
@@ -64,6 +65,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
     };
   }, []);
+
+  useEffect(
+    () =>
+      onSessionExpired(() => {
+        setSession(null);
+        setError('La sesión expiró. Inicia sesión nuevamente.');
+        setStatus('expired');
+      }),
+    [],
+  );
 
   const value = useMemo<AuthContextValue>(
     () => ({

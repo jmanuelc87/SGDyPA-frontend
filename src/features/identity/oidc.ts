@@ -95,6 +95,20 @@ export function clearSession() {
   sessionStorage.removeItem(STORAGE_KEY);
 }
 
+const SESSION_EXPIRED_EVENT = 'sgdypa:session-expired';
+
+export function onSessionExpired(listener: () => void) {
+  window.addEventListener(SESSION_EXPIRED_EVENT, listener);
+  return () => window.removeEventListener(SESSION_EXPIRED_EVENT, listener);
+}
+
+// Drop the invalid session and let the AuthProvider transition the UI to the
+// expired state instead of continuing to attach a rejected bearer token.
+export function notifySessionExpired() {
+  clearSession();
+  window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+}
+
 export function isExpired(session: OidcSession) {
   return Date.now() >= session.expiresAt - SKEW_SECONDS * 1000;
 }
@@ -120,7 +134,20 @@ export async function signIn(returnTo = window.location.pathname + window.locati
   window.location.assign(`${config.authorizationEndpoint}?${params.toString()}`);
 }
 
-export async function handleCallback(search = window.location.search) {
+let callbackInFlight: Promise<void> | null = null;
+
+export function handleCallback(search = window.location.search) {
+  // In React StrictMode the boot effect runs twice; without this guard the
+  // second call finds the one-time state already consumed and fails. Share the
+  // in-flight exchange so both invocations resolve from the same result.
+  if (callbackInFlight) return callbackInFlight;
+  callbackInFlight = doHandleCallback(search).finally(() => {
+    callbackInFlight = null;
+  });
+  return callbackInFlight;
+}
+
+async function doHandleCallback(search: string) {
   const config = requireConfig();
   const params = new URLSearchParams(search);
   const code = params.get('code');

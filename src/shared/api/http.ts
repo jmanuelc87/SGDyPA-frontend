@@ -1,4 +1,8 @@
-import { getValidAccessToken, SessionExpiredError } from '../../features/identity/oidc';
+import {
+  getValidAccessToken,
+  notifySessionExpired,
+  SessionExpiredError,
+} from '../../features/identity/oidc';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
 
@@ -16,6 +20,7 @@ export async function apiFetch<TResponse>(path: string, init?: RequestInit): Pro
   });
 
   if (response.status === 401) {
+    notifySessionExpired();
     throw new SessionExpiredError();
   }
 
