@@ -1,4 +1,5 @@
 import { BoundedContextList } from '../shared/ui/BoundedContextList';
+import { ComponentCatalog } from '../shared/ui/ComponentCatalog';
 import { boundedContexts } from './boundedContexts';
 
 export function App() {
@@ -13,6 +14,7 @@ export function App() {
         </p>
       </section>
       <BoundedContextList contexts={boundedContexts} />
+      <ComponentCatalog />
     </main>
   );
 }
