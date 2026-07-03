@@ -2,6 +2,7 @@ import {
   type ButtonHTMLAttributes,
   type HTMLAttributes,
   type ReactNode,
+  type SelectHTMLAttributes,
   useEffect,
   useId,
   useRef,
@@ -15,6 +16,167 @@ export type ProcessState = {
   description?: string;
   status: 'completed' | 'current' | 'pending' | 'blocked';
 };
+
+export type NavItem = {
+  key: string;
+  label: string;
+  href: string;
+  description?: string;
+};
+
+export type OrganizationOption = {
+  id: string;
+  label: string;
+  meta?: string;
+};
+
+export function OrganizationSelector({
+  activeOrganizationId,
+  className = '',
+  options,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement> & {
+  activeOrganizationId: string;
+  options: OrganizationOption[];
+}) {
+  return (
+    <label className={`org-selector ${className}`.trim()}>
+      <span>Organización activa</span>
+      <select
+        aria-label="Seleccionar organización activa"
+        value={activeOrganizationId}
+        onChange={props.onChange ?? (() => undefined)}
+        {...props}
+      >
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.label}
+            {option.meta ? ` — ${option.meta}` : ''}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+export function AppShell({
+  activeKey,
+  activeOrganizationId,
+  children,
+  navItems,
+  onLogout,
+  organizationOptions,
+  sessionLabel,
+}: {
+  activeKey: string;
+  activeOrganizationId: string;
+  children: ReactNode;
+  navItems: NavItem[];
+  onLogout?: () => void;
+  organizationOptions: OrganizationOption[];
+  sessionLabel?: string;
+}) {
+  return (
+    <div className="workspace-shell">
+      <aside className="global-sidebar" aria-label="Navegación principal">
+        <a className="skip-link" href="#workspace-content">
+          Saltar al contenido
+        </a>
+        <div className="global-sidebar__brand">
+          <strong>SGDyPA</strong>
+          <span>Gestión documental y auditoría</span>
+        </div>
+        <OrganizationSelector
+          activeOrganizationId={activeOrganizationId}
+          options={organizationOptions}
+        />
+        <nav aria-label="Secciones de primer nivel">
+          {navItems.map((item) => (
+            <a
+              aria-current={item.key === activeKey ? 'page' : undefined}
+              className="global-sidebar__link"
+              href={item.href}
+              key={item.key}
+            >
+              <strong>{item.label}</strong>
+              {item.description ? <span>{item.description}</span> : null}
+            </a>
+          ))}
+        </nav>
+        <div className="global-sidebar__session">
+          <span>{sessionLabel ?? 'Sesión activa'}</span>
+          {onLogout ? (
+            <Button type="button" variant="ghost" size="sm" onClick={onLogout}>
+              Cerrar sesión
+            </Button>
+          ) : null}
+        </div>
+      </aside>
+      <main className="app-shell" id="workspace-content">
+        {children}
+      </main>
+    </div>
+  );
+}
+
+export function WorkspaceHeader({
+  badges = [],
+  breadcrumb,
+  frozenFields = [],
+  subtitle,
+  title,
+}: {
+  badges?: ReactNode[];
+  breadcrumb: string[];
+  frozenFields?: string[];
+  subtitle?: string;
+  title: string;
+}) {
+  const visibleTrail = breadcrumb.slice(0, 3);
+
+  return (
+    <header className="workspace-header" aria-labelledby="workspace-title">
+      <nav aria-label="Ruta del workspace" className="workspace-header__breadcrumb">
+        <ol>
+          {visibleTrail.map((crumb, index) => (
+            <li
+              key={`${crumb}-${index}`}
+              aria-current={index === visibleTrail.length - 1 ? 'page' : undefined}
+            >
+              {crumb}
+            </li>
+          ))}
+        </ol>
+      </nav>
+      <div className="workspace-header__title-row">
+        <div>
+          <p className="eyebrow">Workspace</p>
+          <h2 id="workspace-title">{title}</h2>
+          {subtitle ? <p>{subtitle}</p> : null}
+        </div>
+        <Tag
+          tone={frozenFields.length > 0 ? 'warning' : 'success'}
+          icon={frozenFields.length > 0 ? '🔒' : '✓'}
+        >
+          {frozenFields.length > 0
+            ? `${frozenFields.length} campos congelados`
+            : 'Sin campos congelados'}
+        </Tag>
+      </div>
+      <div className="workspace-header__meta">
+        <div className="workspace-header__badges" aria-label="Badges del workspace">
+          {badges}
+        </div>
+        {frozenFields.length > 0 ? (
+          <p className="workspace-header__frozen">
+            Congelados: {frozenFields.join(', ')}. Los cambios se realizan por la ruta legítima de
+            cambio de alcance.
+          </p>
+        ) : null}
+      </div>
+    </header>
+  );
+}
 
 const stateStatusLabel: Record<ProcessState['status'], string> = {
   blocked: 'Bloqueado',
