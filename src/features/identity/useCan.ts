@@ -24,7 +24,7 @@ type CapabilityPolicy = {
  */
 const capabilityPolicies: Record<UiCapability, CapabilityPolicy> = {
   'audit.plan.submit': {
-    roles: ['P1', 'P2', 'auditor_lider', 'auditor'],
+    roles: ['P1', 'auditor_lider'],
     deniedReason: 'Tu rol en esta organización no puede enviar el plan de auditoría.',
   },
   'audit.close.decide': {
