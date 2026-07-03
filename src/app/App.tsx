@@ -2,7 +2,8 @@ import { BoundedContextList } from '../shared/ui/BoundedContextList';
 import { ComponentCatalog } from '../shared/ui/ComponentCatalog';
 import { RequireAuth } from '../features/identity/RequireAuth';
 import { useAuth } from '../features/identity/useAuth';
-import { AppShell, Tag, WorkspaceHeader, type NavItem } from '../shared/ui/primitives';
+import { useCan } from '../features/identity/useCan';
+import { AppShell, Button, Tag, WorkspaceHeader, type NavItem } from '../shared/ui/primitives';
 import { boundedContexts } from './boundedContexts';
 
 const navItems: NavItem[] = [
@@ -29,6 +30,8 @@ const navItems: NavItem[] = [
   },
 ];
 
+const activeOrganizationId = 'org-calidad';
+
 const organizationOptions = [
   { id: 'org-calidad', label: 'Calidad SGC Norte', meta: 'Tenant activo · rol Auditor líder' },
   { id: 'org-proveedores', label: 'Proveedores MX', meta: 'Tenant miembro · rol Observador' },
@@ -37,13 +40,14 @@ const organizationOptions = [
 
 function Workspace() {
   const { logout, session } = useAuth();
+  const closeDecision = useCan('audit.close.decide', activeOrganizationId);
 
   return (
     <AppShell
       activeKey="auditorias"
       navItems={navItems}
       organizationOptions={organizationOptions}
-      activeOrganizationId="org-calidad"
+      activeOrganizationId={activeOrganizationId}
       sessionLabel={session?.profile?.email ?? 'Sesión OIDC activa'}
       onLogout={logout}
     >
@@ -70,8 +74,22 @@ function Workspace() {
         <h1 id="page-title">App shell de auditoría</h1>
         <p>
           Sidebar de primer nivel, header de workspace con breadcrumb y selector de organización
-          activa preparados para consumir el bootstrap <code>/me</code> cuando esté disponible.
+          activa preparados para consumir el bootstrap <code>/me</code> como fuente de presentación.
+          La autorización final nunca ocurre en el cliente: la API valida cada transición y devuelve
+          la razón autoritativa si rechaza la operación.
         </p>
+        <div className="permission-demo">
+          <Button
+            disabled={!closeDecision.allowed || closeDecision.isLoading}
+            disabledReason={closeDecision.disabledReason}
+          >
+            Decidir cierre
+          </Button>
+          <span>
+            Control mostrado por <code>useCan('audit.close.decide')</code> alimentado por{' '}
+            <code>{closeDecision.source}</code>; solo afecta presentación.
+          </span>
+        </div>
       </section>
       <BoundedContextList contexts={boundedContexts} />
       <ComponentCatalog />
