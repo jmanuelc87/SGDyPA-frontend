@@ -36,7 +36,7 @@ export function OrganizationSelector({
   options,
   ...props
 }: SelectHTMLAttributes<HTMLSelectElement> & {
-  activeOrganizationId: string;
+  activeOrganizationId?: string;
   options: OrganizationOption[];
 }) {
   return (
@@ -45,6 +45,7 @@ export function OrganizationSelector({
       <select
         aria-label="Seleccionar organización activa"
         value={activeOrganizationId}
+        disabled={props.disabled ?? options.length <= 1}
         onChange={props.onChange ?? (() => undefined)}
         {...props}
       >
@@ -65,14 +66,16 @@ export function AppShell({
   children,
   navItems,
   onLogout,
+  onOrganizationChange,
   organizationOptions,
   sessionLabel,
 }: {
   activeKey: string;
-  activeOrganizationId: string;
+  activeOrganizationId?: string;
   children: ReactNode;
   navItems: NavItem[];
   onLogout?: () => void;
+  onOrganizationChange?: SelectHTMLAttributes<HTMLSelectElement>['onChange'];
   organizationOptions: OrganizationOption[];
   sessionLabel?: string;
 }) {
@@ -89,6 +92,7 @@ export function AppShell({
         <OrganizationSelector
           activeOrganizationId={activeOrganizationId}
           options={organizationOptions}
+          onChange={onOrganizationChange}
         />
         <nav aria-label="Secciones de primer nivel">
           {navItems.map((item) => (

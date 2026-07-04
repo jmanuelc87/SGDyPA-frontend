@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { useMe } from './api/useMe';
+import { useActiveOrganization } from './useActiveOrganization';
 
 export const uiCapabilities = [
   'audit.plan.submit',
@@ -54,6 +55,7 @@ export type UseCanResult = {
 
 export function useCan(capability: UiCapability, organizationId?: string): UseCanResult {
   const me = useMe();
+  const { activeOrganizationId } = useActiveOrganization();
 
   return useMemo(() => {
     const policy = capabilityPolicies[capability];
@@ -61,7 +63,7 @@ export function useCan(capability: UiCapability, organizationId?: string): UseCa
     const activeMemberships = memberships.filter(
       (membership) =>
         ['active', 'activa'].includes(membership.status.toLowerCase()) &&
-        (organizationId === undefined || membership.organization_id === organizationId),
+        membership.organization_id === (organizationId ?? activeOrganizationId),
     );
     const roles = new Set(activeMemberships.flatMap((membership) => membership.roles));
     const allowed = policy.roles.some((role) => roles.has(role));
@@ -76,5 +78,5 @@ export function useCan(capability: UiCapability, organizationId?: string): UseCa
       isLoading: me.isLoading,
       source: 'api:/me' as const,
     };
-  }, [capability, me.data?.memberships, me.isLoading, organizationId]);
+  }, [activeOrganizationId, capability, me.data?.memberships, me.isLoading, organizationId]);
 }

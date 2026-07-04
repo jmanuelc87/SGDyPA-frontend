@@ -59,15 +59,20 @@ export interface components {
       email: string;
       display_name: string;
       memberships: components['schemas']['Membership'][];
+      organizations?: components['schemas']['Organization'][];
+      orgs?: components['schemas']['Organization'][];
     };
     Membership: {
       organization_id: string;
+      organization_name?: string;
+      organization?: components['schemas']['Organization'];
       roles: string[];
       status: string;
     };
     Organization: {
       id: string;
       name: string;
+      label?: string;
     };
     AuditTransitionRequest: {
       evento: string;
