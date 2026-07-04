@@ -28,7 +28,15 @@ export function ActiveOrganizationProvider({ children }: { children: ReactNode }
   );
 
   useEffect(() => {
-    if (organizationOptions.length === 0) return;
+    if (organizationOptions.length === 0) {
+      // Only clear once /me has resolved: an empty list while loading is expected
+      // and must not wipe the persisted selection.
+      if (me.isSuccess && activeOrganizationId) {
+        setActiveOrganizationIdState(undefined);
+        setActiveOrganizationId(undefined);
+      }
+      return;
+    }
 
     const storedIsAvailable = organizationOptions.some(
       (option) => option.id === activeOrganizationId,
@@ -41,7 +49,7 @@ export function ActiveOrganizationProvider({ children }: { children: ReactNode }
       setActiveOrganizationIdState(nextOrganizationId);
       setActiveOrganizationId(nextOrganizationId);
     }
-  }, [activeOrganizationId, organizationOptions]);
+  }, [activeOrganizationId, me.isSuccess, organizationOptions]);
 
   const value = useMemo<ActiveOrganizationContextValue>(
     () => ({
