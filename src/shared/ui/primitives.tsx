@@ -1,5 +1,6 @@
 import {
   type ButtonHTMLAttributes,
+  Fragment,
   type HTMLAttributes,
   type ReactNode,
   type SelectHTMLAttributes,
@@ -15,6 +16,12 @@ export type ProcessState = {
   label: string;
   description?: string;
   status: 'completed' | 'current' | 'pending' | 'blocked';
+};
+
+export type StateTransition = {
+  label: string;
+  hint?: string;
+  onSelect?: () => void;
 };
 
 export type NavItem = {
@@ -114,10 +121,18 @@ export function AppShell({
           ))}
         </nav>
         <div className="global-sidebar__session">
-          <span>{sessionLabel ?? 'Sesión activa'}</span>
+          <span className="global-sidebar__session-email">{sessionLabel ?? 'Sesión activa'}</span>
           {onLogout ? (
-            <Button type="button" variant="ghost" size="sm" onClick={onLogout}>
-              Cerrar sesión
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="global-sidebar__logout"
+              onClick={onLogout}
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <LogoutIcon />
             </Button>
           ) : null}
         </div>
@@ -129,61 +144,115 @@ export function AppShell({
   );
 }
 
+function LogoutIcon() {
+  return (
+    <svg
+      className="global-sidebar__logout-icon"
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M8.5 1.5H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h5.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6 7h6.5M10.5 4.5 13 7l-2.5 2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg
+      className="frozen-chip__icon"
+      width="9"
+      height="11"
+      viewBox="0 0 9 11"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect x="0.5" y="4.5" width="8" height="6" rx="1" fill="none" stroke="currentColor" />
+      <path d="M2 4.5V3a2.5 2.5 0 0 1 5 0v1.5" fill="none" stroke="currentColor" />
+    </svg>
+  );
+}
+
+// Variante B del wireframe (Shell del workspace): identidad de la auditoría seguida del
+// "riel de estados SUPERIOR" (stepper horizontal). El riel es presentacional; la API es la
+// que autoriza cada transición y devuelve la razón autoritativa si rechaza la operación.
 export function WorkspaceHeader({
-  badges = [],
+  auditType,
   breadcrumb,
+  exceptions,
   frozenFields = [],
+  program,
+  states,
+  subState,
   subtitle,
   title,
+  transition,
 }: {
-  badges?: ReactNode[];
+  auditType?: string;
   breadcrumb: string[];
+  exceptions?: string[];
   frozenFields?: string[];
+  program?: string;
+  states?: ProcessState[];
+  subState?: string;
   subtitle?: string;
   title: string;
+  transition?: StateTransition;
 }) {
   const visibleTrail = breadcrumb.slice(0, 3);
 
   return (
     <header className="workspace-header" aria-labelledby="workspace-title">
-      <nav aria-label="Ruta del workspace" className="workspace-header__breadcrumb">
-        <ol>
-          {visibleTrail.map((crumb, index) => (
-            <li
-              key={`${crumb}-${index}`}
-              aria-current={index === visibleTrail.length - 1 ? 'page' : undefined}
-            >
-              {crumb}
-            </li>
-          ))}
-        </ol>
-      </nav>
-      <div className="workspace-header__title-row">
-        <div>
-          <p className="eyebrow">Workspace</p>
+      <div className="workspace-header__identity">
+        <nav aria-label="Ruta del workspace" className="workspace-header__breadcrumb">
+          <ol>
+            {visibleTrail.map((crumb, index) => (
+              <li
+                key={`${crumb}-${index}`}
+                aria-current={index === visibleTrail.length - 1 ? 'page' : undefined}
+              >
+                {crumb}
+              </li>
+            ))}
+          </ol>
+        </nav>
+        <div className="workspace-header__heading">
           <h2 id="workspace-title">{title}</h2>
-          {subtitle ? <p>{subtitle}</p> : null}
+          {auditType ? <span className="workspace-header__type">{auditType}</span> : null}
+          {program ? <span className="workspace-header__program">{program}</span> : null}
         </div>
-        <Tag
-          tone={frozenFields.length > 0 ? 'warning' : 'success'}
-          icon={frozenFields.length > 0 ? '🔒' : '✓'}
-        >
-          {frozenFields.length > 0
-            ? `${frozenFields.length} campos congelados`
-            : 'Sin campos congelados'}
-        </Tag>
-      </div>
-      <div className="workspace-header__meta">
-        <div className="workspace-header__badges" aria-label="Badges del workspace">
-          {badges}
-        </div>
-        {frozenFields.length > 0 ? (
-          <p className="workspace-header__frozen">
-            Congelados: {frozenFields.join(', ')}. Los cambios se realizan por la ruta legítima de
-            cambio de alcance.
-          </p>
+        {subtitle ? <p className="workspace-header__subtitle">{subtitle}</p> : null}
+        {frozenFields.length > 0 || subState ? (
+          <div className="workspace-header__chips">
+            {frozenFields.map((field) => (
+              <span className="frozen-chip" key={field}>
+                <LockIcon /> {field} · congelado
+              </span>
+            ))}
+            {subState ? <span className="substate-chip">sub-estado UI · {subState}</span> : null}
+          </div>
         ) : null}
       </div>
+      {states && states.length > 0 ? (
+        <HorizontalStateRail states={states} transition={transition} exceptions={exceptions} />
+      ) : null}
     </header>
   );
 }
@@ -364,6 +433,92 @@ export function ProcessStateRail({
         ))}
       </ol>
     </nav>
+  );
+}
+
+const horizontalStateSymbol: Record<ProcessState['status'], string> = {
+  blocked: '!',
+  completed: '✓',
+  current: '●',
+  pending: '',
+};
+
+// Riel de estados SUPERIOR (stepper horizontal) — Variante B. Los nodos y conectores son
+// puramente presentacionales; el botón de transición y las excepciones solo emiten intención,
+// la API valida la transición real.
+export function HorizontalStateRail({
+  ariaLabel = 'Estado del proceso',
+  exceptions = [],
+  states,
+  transition,
+}: {
+  ariaLabel?: string;
+  exceptions?: string[];
+  states: ProcessState[];
+  transition?: StateTransition;
+}) {
+  return (
+    <section className="state-rail-h" aria-label={ariaLabel}>
+      <p className="state-rail-h__label">Estado del proceso</p>
+      <ol className="state-rail-h__track">
+        {states.map((state, index) => (
+          <Fragment key={state.id}>
+            {index > 0 ? (
+              <li
+                aria-hidden="true"
+                className={`state-rail-h__connector${
+                  states[index - 1].status === 'completed' ? ' state-rail-h__connector--done' : ''
+                }`}
+              />
+            ) : null}
+            <li
+              className={`state-rail-h__node state-rail-h__node--${state.status}`}
+              aria-current={state.status === 'current' ? 'step' : undefined}
+            >
+              <span className="state-rail-h__marker" aria-hidden="true">
+                {horizontalStateSymbol[state.status]}
+              </span>
+              <span className="state-rail-h__name">{state.label}</span>
+              {state.description ? (
+                <span className="state-rail-h__note">{state.description}</span>
+              ) : null}
+              {state.status === 'current' ? <span className="state-rail-h__here">AQUÍ</span> : null}
+              <span className="sr-only">
+                Paso {index + 1} de {states.length} · {stateStatusLabel[state.status]}
+              </span>
+            </li>
+          </Fragment>
+        ))}
+      </ol>
+      {transition || exceptions.length > 0 ? (
+        <div className="state-rail-h__actions">
+          {transition ? (
+            <>
+              <span className="state-rail-h__transition-label">Transición válida →</span>
+              <button
+                type="button"
+                className="state-rail-h__transition"
+                onClick={transition.onSelect}
+              >
+                {transition.label}
+                {transition.hint ? (
+                  <span className="state-rail-h__transition-hint"> ({transition.hint})</span>
+                ) : null}
+              </button>
+            </>
+          ) : null}
+          <span className="state-rail-h__spacer" aria-hidden="true" />
+          {exceptions.length > 0 ? (
+            <span className="state-rail-h__exceptions-label">Excepciones</span>
+          ) : null}
+          {exceptions.map((exception) => (
+            <button type="button" className="state-rail-h__exception" key={exception}>
+              {exception}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </section>
   );
 }
 
