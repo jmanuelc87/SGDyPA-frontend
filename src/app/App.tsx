@@ -1,10 +1,13 @@
-import { BoundedContextList } from '../shared/ui/BoundedContextList';
-import { ComponentCatalog } from '../shared/ui/ComponentCatalog';
+import { ActiveOrganizationProvider } from '../features/identity/ActiveOrganizationProvider';
 import { RequireAuth } from '../features/identity/RequireAuth';
 import { useAuth } from '../features/identity/useAuth';
-import { useCan } from '../features/identity/useCan';
-import { AppShell, Button, Tag, WorkspaceHeader, type NavItem } from '../shared/ui/primitives';
-import { boundedContexts } from './boundedContexts';
+import { useActiveOrganization } from '../features/identity/useActiveOrganization';
+import {
+  AppShell,
+  WorkspaceHeader,
+  type NavItem,
+  type ProcessState,
+} from '../shared/ui/primitives';
 
 const navItems: NavItem[] = [
   { key: 'programa', label: 'Programa', href: '#programa', description: 'Portafolio anual' },
@@ -30,12 +33,15 @@ const navItems: NavItem[] = [
   },
 ];
 
-const activeOrganizationId = 'org-calidad';
-
-const organizationOptions = [
-  { id: 'org-calidad', label: 'Calidad SGC Norte', meta: 'Tenant activo · rol Admin tenant' },
-  { id: 'org-proveedores', label: 'Proveedores MX', meta: 'Tenant miembro · rol Observador' },
-  { id: 'org-corporativo', label: 'Corporativo Brisa', meta: 'Tenant admin' },
+// Estados del proceso de auditoría (FSM) representados en el riel superior (Variante B).
+// La presentación marca el estado actual; la API es la que autoriza cada transición.
+const auditStates: ProcessState[] = [
+  { id: 'planificada', label: 'Planificada', status: 'completed' },
+  { id: 'en-ejecucion', label: 'EnEjecución', status: 'current' },
+  { id: 'en-cierre', label: 'EnCierre', description: '3 ramas', status: 'pending' },
+  { id: 'informe-emitido', label: 'InformeEmitido', status: 'pending' },
+  { id: 'en-seguimiento', label: 'EnSeguimiento', status: 'pending' },
+  { id: 'cerrada', label: 'Cerrada', status: 'pending' },
 ];
 
 const roles = [
@@ -205,60 +211,29 @@ function ConfigurationRolesMatrix() {
 
 function Workspace() {
   const { logout, session } = useAuth();
-  const closeDecision = useCan('audit.close.decide', activeOrganizationId);
+  const { activeSelectionId, organizationOptions, selectOrganization } = useActiveOrganization();
 
   return (
     <AppShell
       activeKey="configuracion"
       navItems={navItems}
       organizationOptions={organizationOptions}
-      activeOrganizationId={activeOrganizationId}
+      activeSelectionId={activeSelectionId}
       sessionLabel={session?.profile?.email ?? 'Sesión OIDC activa'}
       onLogout={logout}
+      onOrganizationChange={(event) => selectOrganization(event.currentTarget.value)}
     >
       <WorkspaceHeader
-        breadcrumb={['Configuración', 'Roles', 'Matriz read-only']}
-        title="Configuración del tenant"
-        subtitle="Sub-secciones periféricas para políticas del tenant: roles, clases de retención y tipos documentales. Mantener simple y auditable."
-        badges={[
-          <Tag tone="info" key="seccion">
-            Configuración
-          </Tag>,
-          <Tag tone="success" key="vista">
-            Matriz P1–P7
-          </Tag>,
-          <Tag tone="warning" key="rol">
-            Rol: Admin tenant
-          </Tag>,
-        ]}
+        breadcrumb={['Auditorías', 'AUD-2026-014']}
+        title="Auditoría interna SGC — Línea de producción 3"
+        auditType="Interna"
+        program="Programa 2026 · ISO 9001"
+        frozenFields={['Objetivo', 'Alcance', 'Criterios']}
+        subState="Plan: aprobado"
+        states={auditStates}
+        transition={{ label: '→ Pasar a cierre', hint: 'evidencia contrastada' }}
+        exceptions={['Postergar', 'Cancelar']}
       />
-
-      <ConfigurationRolesMatrix />
-
-      <section className="hero workspace-summary" aria-labelledby="page-title">
-        <p className="eyebrow">SGDyPA · SPA</p>
-        <h1 id="page-title">App shell de auditoría</h1>
-        <p>
-          Sidebar de primer nivel, header de workspace con breadcrumb y selector de organización
-          activa preparados para consumir el bootstrap <code>/me</code> como fuente de presentación.
-          La autorización final nunca ocurre en el cliente: la API valida cada transición y devuelve
-          la razón autoritativa si rechaza la operación.
-        </p>
-        <div className="permission-demo">
-          <Button
-            disabled={!closeDecision.allowed || closeDecision.isLoading}
-            disabledReason={closeDecision.disabledReason}
-          >
-            Decidir cierre
-          </Button>
-          <span>
-            Control mostrado por <code>useCan('audit.close.decide')</code> alimentado por{' '}
-            <code>{closeDecision.source}</code>; solo afecta presentación.
-          </span>
-        </div>
-      </section>
-      <BoundedContextList contexts={boundedContexts} />
-      <ComponentCatalog />
     </AppShell>
   );
 }
@@ -266,7 +241,9 @@ function Workspace() {
 export function App() {
   return (
     <RequireAuth>
-      <Workspace />
+      <ActiveOrganizationProvider>
+        <Workspace />
+      </ActiveOrganizationProvider>
     </RequireAuth>
   );
 }
