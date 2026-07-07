@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { useMe } from './api/useMe';
+import { roleNames } from './roles';
 import { useActiveOrganization } from './useActiveOrganization';
 
 export const uiCapabilities = [
@@ -65,7 +66,7 @@ export function useCan(capability: UiCapability, organizationId?: string): UseCa
         ['active', 'activa'].includes(membership.status.toLowerCase()) &&
         membership.organization_id === (organizationId ?? activeOrganizationId),
     );
-    const roles = new Set(activeMemberships.flatMap((membership) => membership.roles));
+    const roles = new Set(activeMemberships.flatMap((membership) => roleNames(membership.roles)));
     const allowed = policy.roles.some((role) => roles.has(role));
 
     return {

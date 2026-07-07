@@ -34,7 +34,13 @@ const navItems: NavItem[] = [
 
 function Workspace() {
   const { logout, session } = useAuth();
-  const { activeOrganizationId, organizationOptions, selectOrganization } = useActiveOrganization();
+  const {
+    activeOrganizationId,
+    activeRole,
+    activeSelectionId,
+    organizationOptions,
+    selectOrganization,
+  } = useActiveOrganization();
   const closeDecision = useCan('audit.close.decide');
 
   return (
@@ -42,7 +48,7 @@ function Workspace() {
       activeKey="auditorias"
       navItems={navItems}
       organizationOptions={organizationOptions}
-      activeOrganizationId={activeOrganizationId}
+      activeSelectionId={activeSelectionId}
       sessionLabel={session?.profile?.email ?? 'Sesión OIDC activa'}
       onLogout={logout}
       onOrganizationChange={(event) => selectOrganization(event.currentTarget.value)}
@@ -60,8 +66,9 @@ function Workspace() {
           </Tag>,
           <Tag tone="warning" key="rol">
             Org:{' '}
-            {organizationOptions.find((option) => option.id === activeOrganizationId)?.label ??
-              'Cargando'}
+            {organizationOptions.find((option) => option.organizationId === activeOrganizationId)
+              ?.label ?? 'Cargando'}
+            {activeRole ? ` · Rol: ${activeRole}` : ''}
           </Tag>,
         ]}
         frozenFields={['Objetivo', 'Alcance', 'Criterios']}

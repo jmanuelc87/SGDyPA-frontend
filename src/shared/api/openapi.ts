@@ -66,7 +66,9 @@ export interface components {
       organization_id: string;
       organization_name?: string;
       organization?: components['schemas']['Organization'];
-      roles: string[];
+      roles: (
+        string | { name?: string; role?: string; code?: string; label?: string; id?: string }
+      )[];
       status: string;
     };
     Organization: {

@@ -25,18 +25,24 @@ export type NavItem = {
 };
 
 export type OrganizationOption = {
+  // Identificador único de la fila (organización + rol). Es la key de React y el
+  // valor del <option>, ya que varias filas pueden compartir organización.
   id: string;
+  // Organización que se activa al elegir la fila.
+  organizationId: string;
+  // Rol asociado a la fila, si aplica.
+  role?: string;
   label: string;
   meta?: string;
 };
 
 export function OrganizationSelector({
-  activeOrganizationId,
+  activeSelectionId,
   className = '',
   options,
   ...props
 }: SelectHTMLAttributes<HTMLSelectElement> & {
-  activeOrganizationId?: string;
+  activeSelectionId?: string;
   options: OrganizationOption[];
 }) {
   return (
@@ -44,7 +50,7 @@ export function OrganizationSelector({
       <span>Organización activa</span>
       <select
         aria-label="Seleccionar organización activa"
-        value={activeOrganizationId}
+        value={activeSelectionId}
         disabled={props.disabled ?? options.length <= 1}
         onChange={props.onChange ?? (() => undefined)}
         {...props}
@@ -62,7 +68,7 @@ export function OrganizationSelector({
 
 export function AppShell({
   activeKey,
-  activeOrganizationId,
+  activeSelectionId,
   children,
   navItems,
   onLogout,
@@ -71,7 +77,7 @@ export function AppShell({
   sessionLabel,
 }: {
   activeKey: string;
-  activeOrganizationId?: string;
+  activeSelectionId?: string;
   children: ReactNode;
   navItems: NavItem[];
   onLogout?: () => void;
@@ -90,7 +96,7 @@ export function AppShell({
           <span>Gestión documental y auditoría</span>
         </div>
         <OrganizationSelector
-          activeOrganizationId={activeOrganizationId}
+          activeSelectionId={activeSelectionId}
           options={organizationOptions}
           onChange={onOrganizationChange}
         />
