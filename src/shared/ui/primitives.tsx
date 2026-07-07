@@ -2,6 +2,7 @@ import {
   type ButtonHTMLAttributes,
   Fragment,
   type HTMLAttributes,
+  type MouseEvent,
   type ReactNode,
   type SelectHTMLAttributes,
   useEffect,
@@ -79,6 +80,7 @@ export function AppShell({
   children,
   navItems,
   onLogout,
+  onNavigate,
   onOrganizationChange,
   organizationOptions,
   sessionLabel,
@@ -88,6 +90,7 @@ export function AppShell({
   children: ReactNode;
   navItems: NavItem[];
   onLogout?: () => void;
+  onNavigate?: (item: NavItem, event: MouseEvent<HTMLAnchorElement>) => void;
   onOrganizationChange?: SelectHTMLAttributes<HTMLSelectElement>['onChange'];
   organizationOptions: OrganizationOption[];
   sessionLabel?: string;
@@ -114,6 +117,7 @@ export function AppShell({
               className="global-sidebar__link"
               href={item.href}
               key={item.key}
+              onClick={onNavigate ? (event) => onNavigate(item, event) : undefined}
             >
               <strong>{item.label}</strong>
               {item.description ? <span>{item.description}</span> : null}
