@@ -1094,3 +1094,179 @@ h1 {
   color: #5a6875;
   line-height: 1.55;
 }
+
+.config-card {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 24px;
+  padding: clamp(22px, 4vw, 34px);
+  border: 1px solid #dce4ec;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 18px 60px rgb(26 39 51 / 8%);
+}
+
+.config-card__heading {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.config-card__heading h2 {
+  margin-bottom: 10px;
+  font-size: clamp(1.7rem, 4vw, 3rem);
+  letter-spacing: -0.04em;
+}
+
+.config-card__heading p:last-child,
+.config-note {
+  max-width: 780px;
+  margin-bottom: 0;
+  color: #5a6875;
+  line-height: 1.6;
+}
+
+.config-subnav,
+.config-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.config-subnav {
+  border-bottom: 1px solid #dce4ec;
+}
+
+.config-subnav a {
+  padding: 10px 14px;
+  border-bottom: 3px solid transparent;
+  color: #5a6875;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.config-subnav a:focus-visible {
+  outline: 3px solid #9db4ca;
+  outline-offset: 2px;
+}
+
+.config-subnav a[aria-current='page'] {
+  border-color: #44607d;
+  color: #284c73;
+}
+
+.config-legend {
+  color: #5a6875;
+  font-size: 0.92rem;
+}
+
+.config-legend span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.capability-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #e6edf3;
+  border-radius: 18px;
+}
+
+.capability-table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+}
+
+.capability-table th,
+.capability-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #e6edf3;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.capability-table thead th {
+  color: #44607d;
+  background: #f8fafc;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.capability-table thead th:first-child,
+.capability-table tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 330px;
+  text-align: left;
+  background: #fff;
+}
+
+.capability-table thead th:first-child {
+  z-index: 2;
+  background: #f8fafc;
+}
+
+.capability-table th small,
+.capability-table tbody th span,
+.capability-table tbody th small {
+  display: block;
+}
+
+.capability-table th small,
+.capability-table tbody th small {
+  margin-top: 3px;
+  color: #6b7785;
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+.capability-table tbody th span {
+  color: #44607d;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.capability-table tbody th strong {
+  display: block;
+  margin-top: 3px;
+}
+
+.capability-mark {
+  display: inline-grid;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #cfd9e3;
+  border-radius: 999px;
+  color: #6b7785;
+  background: #f8fafc;
+  font-weight: 900;
+}
+
+.capability-mark--full {
+  border-color: #9ac5ad;
+  color: #2f6f4e;
+  background: #e7f4ec;
+}
+
+.capability-mark--read {
+  border-color: #9db4ca;
+  color: #284c73;
+  background: #eef4fa;
+}
+
+@media (max-width: 720px) {
+  .config-card__heading {
+    display: grid;
+  }
+}
