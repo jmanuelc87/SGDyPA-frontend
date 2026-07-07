@@ -1,7 +1,9 @@
 import { BoundedContextList } from '../shared/ui/BoundedContextList';
 import { ComponentCatalog } from '../shared/ui/ComponentCatalog';
+import { ActiveOrganizationProvider } from '../features/identity/ActiveOrganizationProvider';
 import { RequireAuth } from '../features/identity/RequireAuth';
 import { useAuth } from '../features/identity/useAuth';
+import { useActiveOrganization } from '../features/identity/useActiveOrganization';
 import { useCan } from '../features/identity/useCan';
 import { AppShell, Button, Tag, WorkspaceHeader, type NavItem } from '../shared/ui/primitives';
 import { boundedContexts } from './boundedContexts';
@@ -30,26 +32,26 @@ const navItems: NavItem[] = [
   },
 ];
 
-const activeOrganizationId = 'org-calidad';
-
-const organizationOptions = [
-  { id: 'org-calidad', label: 'Calidad SGC Norte', meta: 'Tenant activo · rol Auditor líder' },
-  { id: 'org-proveedores', label: 'Proveedores MX', meta: 'Tenant miembro · rol Observador' },
-  { id: 'org-corporativo', label: 'Corporativo Brisa', meta: 'Tenant admin' },
-];
-
 function Workspace() {
   const { logout, session } = useAuth();
-  const closeDecision = useCan('audit.close.decide', activeOrganizationId);
+  const {
+    activeOrganizationId,
+    activeRole,
+    activeSelectionId,
+    organizationOptions,
+    selectOrganization,
+  } = useActiveOrganization();
+  const closeDecision = useCan('audit.close.decide');
 
   return (
     <AppShell
       activeKey="auditorias"
       navItems={navItems}
       organizationOptions={organizationOptions}
-      activeOrganizationId={activeOrganizationId}
+      activeSelectionId={activeSelectionId}
       sessionLabel={session?.profile?.email ?? 'Sesión OIDC activa'}
       onLogout={logout}
+      onOrganizationChange={(event) => selectOrganization(event.currentTarget.value)}
     >
       <WorkspaceHeader
         breadcrumb={['Auditorías', 'AUD-2026-009', 'Planificada']}
@@ -63,7 +65,10 @@ function Workspace() {
             Auditoría interna
           </Tag>,
           <Tag tone="warning" key="rol">
-            Rol: Auditor líder
+            Org:{' '}
+            {organizationOptions.find((option) => option.organizationId === activeOrganizationId)
+              ?.label ?? 'Cargando'}
+            {activeRole ? ` · Rol: ${activeRole}` : ''}
           </Tag>,
         ]}
         frozenFields={['Objetivo', 'Alcance', 'Criterios']}
@@ -100,7 +105,9 @@ function Workspace() {
 export function App() {
   return (
     <RequireAuth>
-      <Workspace />
+      <ActiveOrganizationProvider>
+        <Workspace />
+      </ActiveOrganizationProvider>
     </RequireAuth>
   );
 }

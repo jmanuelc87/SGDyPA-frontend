@@ -3,6 +3,7 @@ import {
   notifySessionExpired,
   SessionExpiredError,
 } from '../../features/identity/oidc';
+import { getActiveOrganizationId } from '../../features/identity/activeOrganization';
 import { ApiError, isApiErrorEnvelope } from './errors';
 import type { paths } from './openapi';
 
@@ -51,7 +52,9 @@ export async function apiFetch<
     existing: init?.headers,
     hasJsonBody: init?.body !== undefined,
     idempotencyKey: method === 'post' ? init?.idempotencyKey : false,
-    organizationId: init?.organizationId,
+    organizationId:
+      init?.organizationId ??
+      (path === '/me' || path === '/organizations' ? undefined : getActiveOrganizationId()),
     token,
   });
 
